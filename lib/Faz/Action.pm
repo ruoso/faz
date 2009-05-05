@@ -3,7 +3,8 @@ use Faz::Controller;
 role Faz::Action {
    has Faz::Controller $.controller;
    has Str $.private-name;
-   multi method begin {...}
-   multi method execute(*@_, *%_) {...}
-   multi method end {...}
+# yada methods are not supported yet
+#   multi method begin {...}
+#   multi method execute(*@_, *%_) {...}
+#   multi method end {...}
 }

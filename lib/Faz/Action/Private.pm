@@ -1,4 +1,4 @@
-role Faz::Action::Private does Faz::Action {
+class Faz::Action::Private does Faz::Action {
    has Callable $.begin-closure;
    has Callable $.execute-closure;
    has Callable $.end-closure;

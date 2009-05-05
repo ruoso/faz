@@ -1,5 +1,5 @@
 use Faz::Action;
-role Faz::Action::Chained does Faz::Action {
+class Faz::Action::Chained does Faz::Action {
    has Faz::Action::Chained $.parent;
    has Regex $.regex;
 
