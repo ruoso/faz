@@ -1,8 +1,12 @@
 module MyApp;
 
 use Faz::Application;
+use Faz::Controller;
+use Faz::Action::Root;
+use Faz::Action::Chained;
+use Faz::Action::Public;
 
-my $app = Faz::Application.new();
+my $app = Faz::Application.new(:dispatcher(Faz::Dispatcher.new()));
 my $ctrl = Faz::Controller.new();
 
 my $root = Faz::Action::Root.new( :controller($ctrl),
