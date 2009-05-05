@@ -5,7 +5,7 @@ use Faz::Action::Public;
 role Faz::Dispatcher {
   has %!actions;
   has @!public;
-  has $.regex;
+  has $!regex;
 
   method register-action (Faz::Action $a) {
     fail 'Duplicated action'
@@ -32,10 +32,7 @@ role Faz::Dispatcher {
       }
     }
 
-    my @subregexes;
-    for @!public -> $action {
-        push @subregexes, buildspec($action);
-    }
+    my @subregexes = map { buildspec($_) }, @!public;
 
     my &subrx = -> $/ {
       my $match = $/.clone;
@@ -48,13 +45,15 @@ role Faz::Dispatcher {
       make $match;
     }
 
-    $.regex = / $<action> = <subrx> /;
+    $!regex = / $<action> = <subrx> /;
 
+    # I get a null pmc in isa_pmc() if without this line...
+    1;
   }
 
   method dispatch() {
-    self.compile unless $.regex;
-    if $*request.uri.path ~~ $.regex {
+    self.compile unless $!regex;
+    if $*request.uri.path ~~ $!regex {
       self.run-action($<action><?>, |$<action><actcap>);
     } else {
       fail 'No action matched';
