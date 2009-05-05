@@ -1,7 +1,7 @@
 use Faz::Dispatcher;
 role Faz::Application {
   has %.components is rw;
-  has Faz::Dispatcher $.dispatcher is rw = Faz::Dispatcher.new(); handles <register-action dispatch>;
+  has Faz::Dispatcher $.dispatcher is rw handles <register-action dispatch>;
 
   # this is where the several steps performed by catalyst should
   # reside, so application-wide plugins can modify
