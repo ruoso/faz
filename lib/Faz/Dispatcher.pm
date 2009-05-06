@@ -58,11 +58,10 @@ role Faz::Dispatcher {
     self.compile;
 # rakudo does not support contextual variables yet
 #    if $*request.uri.path ~~ $!regex {
-    if '/blog/faz' ~~ $!regex {
+    if '/blog/faz/bla' ~~ $!regex {
       my %named = %($<subrx><action_capture>);
       my @pos = @($<subrx><action_capture>);
       %named<parent_action_capture> = $<subrx><parent_action_capture>;
-      say 'named arguments are: ' ~ %named.perl;
       self.run-action($<subrx>.ast, |@pos, |%named );
     } else {
       say 'failed';
@@ -70,24 +69,23 @@ role Faz::Dispatcher {
     }
   }
 
-  method run-action($action is context, *@_, *%_) {
+  method run-action($action is context, *@pos, *%named) {
     my $errors is context<rw>;
-    try {
-      say 'named arguments are: ' ~ %_.perl;
-      say 'positionals are: ' ~ @_.perl;
-      $action.*begin(|@_, |%_);
-      $action.*execute(|@_, |%_);
+    {
+      $action.*begin(|@pos, |%named);
+      $action.*execute(|@pos, |%named);
       CATCH {
         say $!;
         $errors = $! if $!;
       }
     }
-    $action.*end(|@_, |%_);
+    $action.*end(|@pos, |%named);
 # we don't know how to handle control exceptions yet.
 #    CONTROL {
 #      when Faz::ControlExceptionDetach {
 #        self.run-action(%!actions{$_.path}, |$_.capture);
 #      }
 #    }
+    1;
   }
 }

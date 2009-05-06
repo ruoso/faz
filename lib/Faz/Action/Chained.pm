@@ -7,7 +7,7 @@ class Faz::Action::Chained does Faz::Action {
    has Callable $.execute-closure;
    has Callable $.end-closure;
 
-   multi method begin(*@_, :$parent_action_capture, *%_) {
+   multi method begin(*@p, :$parent_action_capture, *%n) {
      if $.parent {
        my %named;
        my @pos;
@@ -15,16 +15,15 @@ class Faz::Action::Chained does Faz::Action {
          %named := %($parent_action_capture<action_capture>);
          @pos := @($parent_action_capture<action_capture>);
          %named<parent_action_capture> = $parent_action_capture<parent_action_capture>;
-         say 'named arguments are: ' ~ named;
        }
        $.parent.*begin(|@pos, |%named);
      }
      if $.begin-closure {
-       $.begin-closure.(|@_, |%_)
+       $.begin-closure.(|@p, |%n)
      }
    }
 
-   multi method execute(*@_, :$parent_action_capture, *%_) {
+   multi method execute(*@p, :$parent_action_capture, *%n) {
      if $.parent {
        my %named;
        my @pos;
@@ -36,13 +35,13 @@ class Faz::Action::Chained does Faz::Action {
        $.parent.*execute(|%named, |@pos);
      }
      if $.execute-closure {
-       $.execute-closure.(|@_, |%_)
+       $.execute-closure.(|@p, |%n)
      }
    }
 
-   multi method end(*@_, :$parent_action_capture, *%_) {
+   multi method end(*@p, :$parent_action_capture, *%n) {
      if $.end-closure {
-       $.end-closure.(|@_, |%_)
+       $.end-closure.(|@p, |%n)
      }
      if $.parent {
        my %named;

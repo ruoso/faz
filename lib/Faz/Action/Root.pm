@@ -2,4 +2,9 @@
 use Faz::Action::Chained;
 class Faz::Action::Root is Faz::Action::Chained {
    has $.base;
+   method regex {
+# rakudo doesnt allow that yet
+#     /^ $.base /;
+     /^ \/ /;
+   }
 }
