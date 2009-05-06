@@ -79,7 +79,7 @@ role Faz::Dispatcher {
         $errors = $! if $!;
       }
     }
-    $action.*end(|@pos, |%named);
+    $action.*finish(|@pos, |%named);
 # we don't know how to handle control exceptions yet.
 #    CONTROL {
 #      when Faz::ControlExceptionDetach {

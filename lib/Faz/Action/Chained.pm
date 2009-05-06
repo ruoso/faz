@@ -5,7 +5,7 @@ class Faz::Action::Chained does Faz::Action {
 
    has Callable $.begin-closure;
    has Callable $.execute-closure;
-   has Callable $.end-closure;
+   has Callable $.finish-closure;
 
    multi method begin(*@p, :$parent_action_capture, *%n) {
      if $.parent {
@@ -39,9 +39,9 @@ class Faz::Action::Chained does Faz::Action {
      }
    }
 
-   multi method end(*@p, :$parent_action_capture, *%n) {
-     if $.end-closure {
-       $.end-closure.(|@p, |%n)
+   multi method finish(*@p, :$parent_action_capture, *%n) {
+     if $.finish-closure {
+       $.finish-closure.(|@p, |%n)
      }
      if $.parent {
        my %named;
@@ -51,7 +51,7 @@ class Faz::Action::Chained does Faz::Action {
          @pos := @($parent_action_capture<action_capture>);
          %named<parent_action_capture> = $parent_action_capture<parent_action_capture>;
        }
-       $.parent.*end(|%named, |@pos);
+       $.parent.*finish(|%named, |@pos);
      }
    }
 }

@@ -1,17 +1,17 @@
 class Faz::Action::Private does Faz::Action {
    has Callable $.begin-closure;
    has Callable $.execute-closure;
-   has Callable $.end-closure;
-   multi method begin {
-     $.begin-closure.(self)
+   has Callable $.finish-closure;
+   multi method begin(*@p, *%n) {
+     $.begin-closure.(|@p, |%n)
        if $.begin-closure;
    }
-   multi method execute(*@_, *%_) {
-     $.execute-closure.(self, |@_, |%_)
+   multi method execute(*@p, *%n) {
+     $.execute-closure.(|@p, |%n)
        if $.execute-closure;
    }
-   multi method end {
-     $.end-closure.(self)
-       if $.end-closure;
+   multi method finish(*@p, *%n) {
+     $.finish-closure.(@p, %n)
+       if $.finish-closure;
    }
 }
