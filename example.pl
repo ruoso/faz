@@ -25,9 +25,9 @@ my $blog = Faz::Action::Chained.new( :parent($root),
                                      :controller($ctrl),
                                      :private-name('(root)/blog/*'),
                                      :regex(/ blog\/(\w+) /),
-                                     :begin-closure({ say "blog - begin" }),
-                                     :execute-closure(-> $name { say "blog($name) - execute " }),
-                                     :end-closure({ say "blog - end" }) );
+                                     :begin-closure(-> $name { say "blog $name - begin " }),
+                                     :execute-closure(-> $name { say "blog $name - execute " }),
+                                     :end-closure(-> $name { say "blog $name - end" }) );
 $app.register-action($blog);
 
 my $viewblog = Faz::Action::Public.new( :parent($blog),

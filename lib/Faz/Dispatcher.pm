@@ -22,21 +22,25 @@ role Faz::Dispatcher {
   method compile {
 
     my sub buildspec($act) {
-      my &rx = $act.regex;
-      my &closure = -> $/ { make $act; my $in = $/.new($/); $in.to = $in.from; $in };
+      my &action_capture = $act.regex;
+      my &closure = -> $/ {
+        make $act;
+        my $in = $/.new($/);
+        $in.to = $in.from; $in;
+      };
       if $act.parent {
-        my &pr = buildspec($act.parent);
-        return token { $<actcap> = ( $<_parent_action_capture> = <pr> <rx> ) <closure> };
+        my &parent_action_capture = buildspec($act.parent);
+        return token { <parent_action_capture> <action_capture> <?closure> };
       } else {
-        return token { $<actcap> = <rx> <closure> };
+        return token { <action_capture> <?closure> };
       }
     }
 
     my @subregexes = map { buildspec($_) }, @!public;
 
-    my sub subrx ($/) {
-      for @subregexes -> &subrx {
-        my $result = subrx($/);
+    my &subrx = sub ($/) {
+      for @subregexes -> &eachrx {
+        my $result = eachrx($/);
         if $result {
            return $result;
         };
@@ -44,7 +48,7 @@ role Faz::Dispatcher {
       return Match.new($/);
     };
 
-    $!regex = token { ( <subrx> ) };
+    $!regex = token { <subrx> };
 
     # I get a null pmc in isa_pmc() if without this line...
     1;
@@ -55,29 +59,30 @@ role Faz::Dispatcher {
 # rakudo does not support contextual variables yet
 #    if $*request.uri.path ~~ $!regex {
     if '/blog/faz' ~~ $!regex {
-      say $/;
-      say $/[0];
-      say $/[0].elems;
-#      self.run-action($/[0]<?>, |$/[0]<actcap>);
-      self.run-action($/[0]<?>);
+      my %named = %($<subrx><action_capture>);
+      my @pos = @($<subrx><action_capture>);
+      %named<parent_action_capture> = $<subrx><parent_action_capture>;
+      say 'named arguments are: ' ~ %named.perl;
+      self.run-action($<subrx>.ast, |@pos, |%named );
     } else {
+      say 'failed';
       fail 'No action matched';
     }
   }
 
-#  method run-action($action, *@_, *%_) {
-  method run-action($action) {
-    say $action.private-name;
+  method run-action($action is context, *@_, *%_) {
     my $errors is context<rw>;
     try {
-      $action.*begin;
-      $action.*execute();
+      say 'named arguments are: ' ~ %_.perl;
+      say 'positionals are: ' ~ @_.perl;
+      $action.*begin(|@_, |%_);
+      $action.*execute(|@_, |%_);
       CATCH {
-        $_.handled = 1;
-        $errors = $_;
+        say $!;
+        $errors = $! if $!;
       }
     }
-    $action.*end;
+    $action.*end(|@_, |%_);
 # we don't know how to handle control exceptions yet.
 #    CONTROL {
 #      when Faz::ControlExceptionDetach {
