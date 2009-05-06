@@ -53,7 +53,9 @@ role Faz::Dispatcher {
 
   method dispatch() {
     self.compile unless $!regex;
-    if $*request.uri.path ~~ $!regex {
+# rakudo does not support contextual variables yet
+#    if $*request.uri.path ~~ $!regex {
+    if '/blog/faz' ~~ $!regex {
       self.run-action($<action><?>, |$<action><actcap>);
     } else {
       fail 'No action matched';
