@@ -15,6 +15,7 @@ my $root = Faz::Action::Root.new( :parent(0),
                                   :controller($ctrl),
                                   :private-name('(root)'),
                                   :base('/'),
+                                  :regex(/ \/ /),
                                   :begin-closure({ say "root - begin" }),
                                   :execute-closure({ say "root - execute " }),
                                   :end-closure({ say "root - end" }) );
@@ -32,7 +33,7 @@ $app.register-action($blog);
 my $viewblog = Faz::Action::Public.new( :parent($blog),
                                         :controller($ctrl),
                                         :private-name('(root)/blog/*/'),
-                                        :regex(/^ $/),
+                                        :regex(/ \/? /),
                                         :begin-closure({ say "viewblog - begin" }),
                                         :execute-closure({ say "viewblog - execute" }),
                                         :end-closure({ say "viewblog - end" }) );
