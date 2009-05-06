@@ -23,39 +23,52 @@ role Faz::Dispatcher {
 
     my sub buildspec($act) {
       my &rx = $act.regex;
-      my &closure = -> $/ { make $act };
+      my &closure = -> $/ { say 'closure'; make $act };
       if $act.parent {
         my &pr = buildspec($act.parent);
-        return / $<actcap> = ( $<_parent_action_capture> = <pr> <rx> ) <closure> /;
+        return token { $<actcap> = ( $<_parent_action_capture> = <pr> <rx> ) <closure> };
       } else {
-        return / $<actcap> = <rx> <closure> /;
+        return token { $<actcap> = <rx> <closure> };
       }
     }
 
     my @subregexes = map { buildspec($_) }, @!public;
 
     my &subrx = -> $/ {
-      my $match = $/.clone;
-      $match.from = $match.to - 1;
+      say 'subrx 1';
+      my $match = $/.new($/);
       for @subregexes -> &rx {
-        my $submatch = $/.clone;
+        say 'subrx 2';
+        my $submatch = $/.new($/);
+        say $/.perl;
+        say 'subrx 3';
         my $result = rx($submatch);
-        if $result { $match = $result };
+        say 'subrx 4';
+        if $result {
+           say 'subrx 4.1';
+           $match = $result;
+           say 'subrx 4.2';
+        };
+        say 'subrx 5';
       };
+      say 'subrx 6';
       make $match;
+      say 'subrx 7';
     }
 
-    $!regex = / $<action> = <subrx> /;
+    $!regex = token { $<action> = <subrx> };
 
     # I get a null pmc in isa_pmc() if without this line...
     1;
   }
 
   method dispatch() {
-    self.compile unless $!regex;
+    self.compile;
 # rakudo does not support contextual variables yet
 #    if $*request.uri.path ~~ $!regex {
+say 'before';
     if '/blog/faz' ~~ $!regex {
+say 'after';
       self.run-action($<action><?>, |$<action><actcap>);
     } else {
       fail 'No action matched';
