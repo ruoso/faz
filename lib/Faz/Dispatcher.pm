@@ -56,7 +56,7 @@ role Faz::Dispatcher {
 
   method dispatch() {
     self.compile;
-# rakudo does not support contextual variables yet
+# TODO: rakudo does not support contextual variables yet
 #    if $*request.uri.path ~~ $!regex {
     if '/blog/faz/bla' ~~ $!regex {
       my %named = %($<subrx><action_capture>);
@@ -80,7 +80,7 @@ role Faz::Dispatcher {
       }
     }
     $action.*finish(|@pos, |%named);
-# we don't know how to handle control exceptions yet.
+# TODO: rakudo don't know how to handle control exceptions yet.
 #    CONTROL {
 #      when Faz::ControlExceptionDetach {
 #        self.run-action(%!actions{$_.path}, |$_.capture);
