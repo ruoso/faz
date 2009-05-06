@@ -35,26 +35,14 @@ role Faz::Dispatcher {
     my @subregexes = map { buildspec($_) }, @!public;
 
     my &subrx = -> $/ {
-      say 'subrx 1';
-      my $match = $/.new($/);
-      for @subregexes -> &rx {
-        say 'subrx 2';
-        my $submatch = $/.new($/);
-        say $/.perl;
-        say 'subrx 3';
-        my $result = rx($submatch);
-        say 'subrx 4';
+      for @subregexes -> &subrx {
+        my $result = subrx($/);
         if $result {
-           say 'subrx 4.1';
-           $match = $result;
-           say 'subrx 4.2';
+           return $result;
         };
-        say 'subrx 5';
       };
-      say 'subrx 6';
-      make $match;
-      say 'subrx 7';
-    }
+      return Match.new($/);
+    };
 
     $!regex = token { $<action> = <subrx> };
 
@@ -71,6 +59,7 @@ say 'before';
 say 'after';
       self.run-action($<action><?>, |$<action><actcap>);
     } else {
+say 'failed!';
       fail 'No action matched';
     }
   }
