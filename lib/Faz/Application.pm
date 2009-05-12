@@ -15,9 +15,10 @@ role Faz::Application {
      $*application = self;
      $*request = $request;
      $*response = $response;
-     self.*prepare;
-     self.*dispatch;
-     self.*finalize;
+     %*stash = ();
+     self.prepare;
+     self.dispatch;
+     self.finalize;
   };
 
 }

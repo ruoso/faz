@@ -55,7 +55,7 @@ role Faz::Dispatcher {
   }
 
   method dispatch() {
-    self.compile;
+    unless $!regex { self.compile; }
     if $*request.uri.path ~~ $!regex {
       my %named = %($<subrx><action_capture>);
       my @pos = @($<subrx><action_capture>);
