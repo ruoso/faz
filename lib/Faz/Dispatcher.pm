@@ -40,7 +40,8 @@ role Faz::Dispatcher {
 
     my &subrx = sub ($/) {
       for @subregexes -> &eachrx {
-        my $result = eachrx($/);
+        my $match = Match.new($/);
+        my $result = eachrx($match);
         if $result {
            return $result;
         };
@@ -48,6 +49,7 @@ role Faz::Dispatcher {
       return Match.new($/);
     };
 
+    warn 'Compiling regexes.';
     $!regex = token { <subrx> };
 
     # I get a null pmc in isa_pmc() if without this line...
@@ -55,15 +57,18 @@ role Faz::Dispatcher {
   }
 
   method dispatch() {
-    unless $!regex { self.compile; }
+    unless defined $!regex {
+      warn 'Compiling regexes at dispatch time.';
+      self.compile;
+    }
     if $*request.uri.path ~~ $!regex {
       my %named = %($<subrx><action_capture>);
       my @pos = @($<subrx><action_capture>);
       %named<parent_action_capture> = $<subrx><parent_action_capture>;
       self.run-action($<subrx>.ast, |@pos, |%named );
     } else {
-      say 'failed';
-      fail 'No action matched';
+      warn "No action matched '{$*request.uri.path}'";
+      1;
     }
   }
 
