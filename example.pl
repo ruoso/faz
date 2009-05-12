@@ -34,13 +34,13 @@ my $viewblog = Faz::Action::Public.new( :parent($blog),
                                         :private-name('(root)/blog/*/'),
                                         :regex(/ (\w+) \/? /),
                                         :begin-closure( -> $name { say "viewblog $name - begin" }),
-                                        :execute-closure( -> $name { say "viewblog $name - execute" }),
+                                        :execute-closure( -> $name { say "viewblog $name " ~ $*request.params<test> ~ " - execute" }),
                                         :finish-closure(-> $name { say "viewblog $name - finish" }) );
 $app.register-action($viewblog);
 
 my $uri = Faz::URI.new(:path('/blog/faz/bla'));
-my $request is context = Faz::Request.new(:uri($uri));
-my $response is context = 1;
+my $request = Faz::Request.new(:uri($uri), :params({ :test<"ok!"> }) );
+my $response = 1;
 $app.handle($request,$response);
 
 1;
