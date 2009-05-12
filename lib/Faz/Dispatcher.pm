@@ -56,9 +56,7 @@ role Faz::Dispatcher {
 
   method dispatch() {
     self.compile;
-# TODO: rakudo does not support contextual variables yet
-#    if $*request.uri.path ~~ $!regex {
-    if '/blog/faz/bla' ~~ $!regex {
+    if $*request.uri.path ~~ $!regex {
       my %named = %($<subrx><action_capture>);
       my @pos = @($<subrx><action_capture>);
       %named<parent_action_capture> = $<subrx><parent_action_capture>;

@@ -11,6 +11,10 @@ role Faz::Application {
   multi method handle($request? is context = $*request,
                       $response? is context = $*response) {
      my $application is context = self;
+     # TODO: context vars are still globals in rakudo...
+     $*application = self;
+     $*request = $request;
+     $*response = $response;
      self.*prepare;
      self.*dispatch;
      self.*finalize;
