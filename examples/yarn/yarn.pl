@@ -1,30 +1,30 @@
 use v6;
 use HTTP::Daemon;
 use Yarn;
-defined @*ARGS[0] && @*ARGS[0] eq '--request' ?? request() !! daemon();
 
 my $yarn = Yarn.new;
 $yarn.setup;
+
+defined @*ARGS[0] && @*ARGS[0] eq '--request' ?? request() !! daemon();
+
 
 # Serve one page
 sub request($c) {
     my $r = $c.get_request;
     warn "{hhmm} {$r.req_method} {$r.url.path} {$r.header('User-Agent')}";
     if $r.req_method eq 'GET' {
-        my $qs = $r.url.path ~~ / '?' (.*) $/
-                    ?? ~$0
-                    !! '';
+        $r.url.path ~~ /^ (<-[?]>*) [ '?' (.*) ]? $/;
         $c.send_response(
-            ~([~] $yarn.call({"QUERY_STRING" => $qs}).[2])
+            ~([~] $yarn.call({"QUERY_STRING" => $/[1],
+                              "SCRIPT_NAME" => $/[0]}).[2])
         );
     }
     elsif $r.req_method eq 'POST' {
-        my $qs = $r.url.path ~~ / '?' (.*) $/
-                    ?? ~$0
-                    !! '';
+        $r.url.path ~~ /^ (<-[?]>*) [ '?' (.*) ]? $/;
         $c.send_response(
             ~([~] $yarn.call({"REQUEST_METHOD" => 'POST',
-                             "QUERY_STRING" => $qs}).[2])
+                             "QUERY_STRING" => $/[1],
+                              "SCRIPT_NAME" => $/[0]}).[2])
         );
     }
     else {

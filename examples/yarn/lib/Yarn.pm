@@ -17,15 +17,21 @@ class Yarn is Faz::Application {
   method setup {
     $.dispatcher = Faz::Dispatcher.new;
 
-    my $root = Faz::Action::Root.new\
-      ( :private-name('(root)'),
+    my $root = Faz::Action::Chained.new\
+      ( :parent(0),
+        :private-name('(root)'),
+        :regex(/ ^ /),
+        :execute-closure({ 1; }),
+        :finish-closure({ 1; }),
         :begin-closure({ %*stash<posts> = get-posts() }) );
-    $.register-action($root);
+    self.register-action($root);
 
     my $index = Faz::Action::Public.new\
       ( :private-name('(root)/'),
-        :regex(/ $/),
-        :chained($root),
+        :regex(/ \/ $ /),
+        :parent($root),
+        :begin-closure({ 1; }),
+        :finish-closure({ 1; }),
         :execute-closure({
            $*response.write(show {
              html {
@@ -45,12 +51,14 @@ class Yarn is Faz::Application {
                })
         })
       );
-    $.register-action($index);
+    self.register-action($index);
 
     my $create = Faz::Action::Public.new\
       ( :private-name('(root)/create'),
-        :regex(/ create \/? $/),
-        :chained($root),
+        :regex(/ \/create \/? $/),
+        :parent($root),
+        :begin-closure({ 1; }),
+        :finish-closure({ 1; }),
         :execute-closure({
            when $*request.GET<title> ne '' {
              my $p = $*request.GET;
@@ -76,14 +84,14 @@ class Yarn is Faz::Application {
            });
         })
       );
-    $.register-action($create);
+    self.register-action($create);
     $.dispatcher.compile;
   }
 
   method call($env) {
     my Web::Request $req .= new($env);
     my Web::Response $res .= new;
-    $.handle($req, $res);
+    self.handle($req, $res);
     $res.finish();
   }
 }
