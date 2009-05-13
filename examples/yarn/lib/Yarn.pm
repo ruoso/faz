@@ -9,9 +9,10 @@ use Tags;
 
 class Yarn is Faz::Application {
   my sub get-posts() {
-    'data/posts' ~~ :f
-      ?? eval(slurp('data/posts')).list
-        !! ()
+    my @posts = 'data/posts' ~~ :f
+      ?? @(eval(slurp('data/posts')))
+        !! ();
+    return @posts;
   }
 
   method setup {
@@ -40,7 +41,7 @@ class Yarn is Faz::Application {
                    p {
                      a :href</create>, { 'Write a new post' }
                      }
-                     for %*stash<posts> -> $post {
+                     for @(%*stash<posts>) -> $post {
                        div :class<post>, {
                          h1 { $post<title> };
                          div { $post<content> };

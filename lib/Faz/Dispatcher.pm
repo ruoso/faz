@@ -30,9 +30,11 @@ role Faz::Dispatcher {
       };
       if $act.parent {
         my &parent_action_capture = buildspec($act.parent);
-        return token { <parent_action_capture> <action_capture> <?closure> };
+        my $t = token { <parent_action_capture> <action_capture> <?closure> };
+        return $t;
       } else {
-        return token { <action_capture> <?closure> };
+        my $t = token { <action_capture> <?closure> };
+        return $t;
       }
     }
 
