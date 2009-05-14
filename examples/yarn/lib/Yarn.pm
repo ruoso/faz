@@ -86,6 +86,41 @@ class Yarn is Faz::Application {
         })
       );
     self.register-action($create);
+
+    my $post = Faz::Action::Chained.new\
+      ( :private-name('(root)/*'),
+        :regex(/ \/ (\d+) /),
+        :parent($root),
+        :finish-closure({ 1; }),
+        :execute-closure({ 1; }),
+        :begin-closure( -> $post_id {
+           %*stash<post> = %*stash<posts>[$post_id];
+        })
+      );
+    self.register-action($post);
+
+    my $view_post = Faz::Action::Public.new\
+      ( :private-name('(root)/*/'),
+        :regex(/ \/? $ /),
+        :parent($post),
+        :finish-closure({ 1; }),
+        :begin-closure({ 1; }),
+        :execute-closure({
+           $*response.write(show {
+             html {
+               head { title { 'Yarn' } }
+                 body {
+                   div :class<post>, {
+                     h1 { %*stash<post><title> };
+                     div { %*stash<post><content> };
+                   }
+                 }
+               }
+           });
+        })
+      );
+    self.register-action($view_post);
+
     $.dispatcher.compile;
   }
 
