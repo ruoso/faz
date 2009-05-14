@@ -11,9 +11,7 @@ role Faz::Dispatcher {
     fail 'Duplicated action'
       if %!actions.exists($a.private-name);
     %!actions{$a.private-name} = $a;
-    if $a ~~ Faz::Action::Public {
-      @!public = (@!public, $a).sort: { $_.priority }
-    }
+    @!public = @(grep { $_ ~~ Faz::Action::Public }, %!actions.values).sort: { $_.priority }
   }
 
   # this method freezes the regexes, combining them into a single
@@ -21,7 +19,9 @@ role Faz::Dispatcher {
   # desired action.
   method compile {
 
+    warn "Public Actions:";
     my sub buildspec($act) {
+      warn $act.private-name;
       my &action_capture = $act.regex;
       my &closure = -> $/ {
         make $act;
@@ -75,6 +75,7 @@ role Faz::Dispatcher {
   }
 
   method run-action($action is context, *@pos, *%named) {
+    $*action = $action;
     my $errors is context<rw>;
     {
       $action.*begin(|@pos, |%named);

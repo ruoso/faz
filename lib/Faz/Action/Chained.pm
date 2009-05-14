@@ -3,9 +3,17 @@ class Faz::Action::Chained does Faz::Action {
    has Faz::Action::Chained $.parent;
    has Regex $.regex;
 
-   has Callable $.begin-closure;
-   has Callable $.execute-closure;
-   has Callable $.finish-closure;
+   has $.begin-closure;
+   has $.execute-closure;
+   has $.finish-closure;
+
+   method private-name {
+     my $name = '';
+     if defined $.parent {
+        $name = $.parent.private-name ~ '/';
+     }
+     $name ~= $!private-name;
+   }
 
    multi method begin(*@p, :$parent_action_capture, *%n) {
      if $.parent {
@@ -18,7 +26,7 @@ class Faz::Action::Chained does Faz::Action {
        }
        $.parent.*begin(|@pos, |%named);
      }
-     if $.begin-closure {
+     if defined $.begin-closure {
        $.begin-closure.(|@p, |%n)
      }
    }
@@ -34,13 +42,13 @@ class Faz::Action::Chained does Faz::Action {
        }
        $.parent.*execute(|%named, |@pos);
      }
-     if $.execute-closure {
+     if defined $.execute-closure {
        $.execute-closure.(|@p, |%n)
      }
    }
 
    multi method finish(*@p, :$parent_action_capture, *%n) {
-     if $.finish-closure {
+     if defined $.finish-closure {
        $.finish-closure.(|@p, |%n)
      }
      if $.parent {

@@ -12,12 +12,8 @@ class Yarn is Faz::Application {
   method setup {
     $.dispatcher = Faz::Dispatcher.new;
 
-    my $root = Faz::Action::Chained.new\
-      ( :parent(0),
-        :private-name('(root)'),
-        :regex(/ ^ /),
-        :execute-closure({ 1; }),
-        :begin-closure({
+    my $root = Faz::Action::Root.new\
+      ( :begin-closure({
           %*stash<posts> = 'data/posts' ~~ :f
                         ?? @(eval(slurp('data/posts')))
                         !! ();
@@ -34,11 +30,9 @@ class Yarn is Faz::Application {
     self.register-action($root);
 
     my $index = Faz::Action::Public.new\
-      ( :private-name('(root)/'),
+      ( :private-name('index'),
         :regex(/ \/ $ /),
         :parent($root),
-        :begin-closure({ 1; }),
-        :finish-closure({ 1; }),
         :execute-closure({
            $*response.write(show {
              html {
@@ -61,11 +55,9 @@ class Yarn is Faz::Application {
     self.register-action($index);
 
     my $create = Faz::Action::Public.new\
-      ( :private-name('(root)/create'),
+      ( :private-name('create'),
         :regex(/ \/create \/? $/),
         :parent($root),
-        :begin-closure({ 1; }),
-        :finish-closure({ 1; }),
         :execute-closure({
            when $*request.GET<title> ne '' {
              my $p = $*request.GET;
@@ -89,11 +81,9 @@ class Yarn is Faz::Application {
     self.register-action($create);
 
     my $post = Faz::Action::Chained.new\
-      ( :private-name('(root)/*'),
+      ( :private-name('post'),
         :regex(/ \/ (\d+) /),
         :parent($root),
-        :finish-closure( -> $post_id { 1; }),
-        :execute-closure( -> $post_id { 1; }),
         :begin-closure( -> $post_id {
            %*stash<post_id> = $post_id;
            %*stash<post> = %*stash<posts>[$post_id];
@@ -102,11 +92,9 @@ class Yarn is Faz::Application {
     self.register-action($post);
 
     my $view_post = Faz::Action::Public.new\
-      ( :private-name('(root)/*/'),
+      ( :private-name('view'),
         :regex(/ \/? $ /),
         :parent($post),
-        :finish-closure({ 1; }),
-        :begin-closure({ 1; }),
         :execute-closure({
            $*response.write(show {
              html {
@@ -132,11 +120,9 @@ class Yarn is Faz::Application {
     self.register-action($view_post);
 
     my $write_comment = Faz::Action::Public.new\
-      ( :private-name('(root)/*/comment'),
+      ( :private-name('comment'),
         :regex(/ \/comment \/? $/),
         :parent($post),
-        :begin-closure({ 1; }),
-        :finish-closure({ 1; }),
         :execute-closure({
            when $*request.GET<author> ne '' {
              my $p = $*request.GET;
