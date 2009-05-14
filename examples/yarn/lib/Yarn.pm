@@ -8,12 +8,6 @@ use Faz::Action::Public;
 use Tags;
 
 class Yarn is Faz::Application {
-  my sub get-posts() {
-    my @posts = 'data/posts' ~~ :f
-      ?? @(eval(slurp('data/posts')))
-        !! ();
-    return @posts;
-  }
 
   method setup {
     $.dispatcher = Faz::Dispatcher.new;
@@ -23,8 +17,20 @@ class Yarn is Faz::Application {
         :private-name('(root)'),
         :regex(/ ^ /),
         :execute-closure({ 1; }),
-        :finish-closure({ 1; }),
-        :begin-closure({ %*stash<posts> = get-posts() }) );
+        :begin-closure({
+          %*stash<posts> = 'data/posts' ~~ :f
+                        ?? @(eval(slurp('data/posts')))
+                        !! ();
+        }),
+        :finish-closure({
+          unless 'data' ~~ :d {
+            run('mkdir data');
+          }
+          my $fh = open('data/posts', :w) or die $!;
+          $fh.print( %*stash<posts>.perl );
+          $fh.close;
+        })
+      );
     self.register-action($root);
 
     my $index = Faz::Action::Public.new\
@@ -63,14 +69,9 @@ class Yarn is Faz::Application {
         :execute-closure({
            when $*request.GET<title> ne '' {
              my $p = $*request.GET;
-             unless 'data' ~~ :d {
-               run('mkdir data');
-             }
              %*stash<posts>.unshift( { title => $p<title>,
-                                       content => $p<content> } );
-             my $fh = open('data/posts', :w) or die $!;
-             $fh.print( %*stash<posts>.perl );
-             $fh.close;
+                                       content => $p<content>,
+                                       comments => [] } );
            }
 
            $*response.write(show {
@@ -91,9 +92,10 @@ class Yarn is Faz::Application {
       ( :private-name('(root)/*'),
         :regex(/ \/ (\d+) /),
         :parent($root),
-        :finish-closure({ 1; }),
-        :execute-closure({ 1; }),
+        :finish-closure( -> $post_id { 1; }),
+        :execute-closure( -> $post_id { 1; }),
         :begin-closure( -> $post_id {
+           %*stash<post_id> = $post_id;
            %*stash<post> = %*stash<posts>[$post_id];
         })
       );
@@ -113,13 +115,48 @@ class Yarn is Faz::Application {
                    div :class<post>, {
                      h1 { %*stash<post><title> };
                      div { %*stash<post><content> };
+                     div :class<comments>, {
+                     for @(%*stash<post><comments>) -> $comment {
+                       div :class<comment>, {
+                         h2 { $comment<author> };
+                         div { $comment<comment> };
+                       }
+                     }
                    }
+                 }
+               }
+             }
+           });
+        })
+      );
+    self.register-action($view_post);
+
+    my $write_comment = Faz::Action::Public.new\
+      ( :private-name('(root)/*/comment'),
+        :regex(/ \/comment \/? $/),
+        :parent($post),
+        :begin-closure({ 1; }),
+        :finish-closure({ 1; }),
+        :execute-closure({
+           when $*request.GET<author> ne '' {
+             my $p = $*request.GET;
+             %*stash<post><comments>.unshift( { author => $p<author>,
+                                                comment => $p<comment> } );
+           }
+
+           $*response.write(show {
+             html { title { 'Write a comment' } }
+               body {
+                 form :action('/'~%*stash<post_id>~'/comment'), :method<get>, {
+                   p { input :name<author>, { '' } }
+                   p { textarea :name<comment>, { '' } }
+                   p { input :type<submit>, { '' } }
                  }
                }
            });
         })
       );
-    self.register-action($view_post);
+    self.register-action($write_comment);
 
     $.dispatcher.compile;
   }
