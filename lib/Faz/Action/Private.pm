@@ -1,3 +1,4 @@
+use Faz::Action;
 class Faz::Action::Private does Faz::Action {
    has $.begin-closure;
    has $.execute-closure;

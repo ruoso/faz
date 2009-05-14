@@ -12,8 +12,11 @@ class Yarn is Faz::Application {
   method setup {
     $.dispatcher = Faz::Dispatcher.new;
 
-    my $root = Faz::Action::Root.new\
-      ( :begin-closure({
+    my $root = Faz::Action::Chained.new\
+      ( :parent(False),
+        :regex(/^ /),
+        :private-name('root'),
+        :begin-closure({
           %*stash<posts> = 'data/posts' ~~ :f
                         ?? @(eval(slurp('data/posts')))
                         !! ();

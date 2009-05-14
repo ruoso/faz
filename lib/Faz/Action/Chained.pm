@@ -9,7 +9,7 @@ class Faz::Action::Chained does Faz::Action {
 
    method private-name {
      my $name = '';
-     if defined $.parent {
+     if $.parent {
         $name = $.parent.private-name ~ '/';
      }
      $name ~= $!private-name;
