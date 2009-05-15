@@ -20,4 +20,7 @@ class Yarn::Model::Posts does Faz::Component {
     @posts[|@_];
   }
 
+  method list {
+    @posts;
+  }
 }
