@@ -11,23 +11,14 @@ class Yarn is Faz::Application {
 
   method setup {
     $.dispatcher = Faz::Dispatcher.new;
+    $.container = Faz::Container.new;
 
     my $root = Faz::Action::Chained.new\
       ( :parent(False),
         :regex(/^ /),
         :private-name('root'),
-        :begin-closure({
-          %*stash<posts> = 'data/posts' ~~ :f
-                        ?? @(eval(slurp('data/posts')))
-                        !! ();
-        }),
         :finish-closure({
-          unless 'data' ~~ :d {
-            run('mkdir data');
-          }
-          my $fh = open('data/posts', :w) or die $!;
-          $fh.print( %*stash<posts>.perl );
-          $fh.close;
+          $*app.model<Posts>.save;
         })
       );
     self.register-action($root);
@@ -44,7 +35,7 @@ class Yarn is Faz::Application {
                    p {
                      a :href</create>, { 'Write a new post' }
                      }
-                     for @(%*stash<posts>) -> $post {
+                     for @($*app.model<Posts>) -> $post {
                        div :class<post>, {
                          h1 { $post<title> };
                          div { $post<content> };
@@ -64,9 +55,9 @@ class Yarn is Faz::Application {
         :execute-closure({
            when $*request.GET<title> ne '' {
              my $p = $*request.GET;
-             %*stash<posts>.unshift( { title => $p<title>,
-                                       content => $p<content>,
-                                       comments => [] } );
+             $*app.model<Posts>.unshift( { title => $p<title>,
+                                           content => $p<content>,
+                                           comments => [] } );
            }
 
            $*response.write(show {
@@ -89,7 +80,7 @@ class Yarn is Faz::Application {
         :parent($root),
         :begin-closure( -> $post_id {
            %*stash<post_id> = $post_id;
-           %*stash<post> = %*stash<posts>[$post_id];
+           %*stash<post> = $*app.model<Posts>[$post_id];
         })
       );
     self.register-action($post);
@@ -146,6 +137,8 @@ class Yarn is Faz::Application {
         })
       );
     self.register-action($write_comment);
+
+    self.register-component(Yarn::Model::Posts);
 
     $.dispatcher.compile;
   }

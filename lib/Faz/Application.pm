@@ -1,7 +1,8 @@
 use Faz::Dispatcher;
+use Faz::Container;
 role Faz::Application {
-  has %.components is rw;
   has Faz::Dispatcher $.dispatcher is rw handles <register-action dispatch>;
+  has Faz::Container $.container is rw handles <register-component component model view>;
 
   # this is where the several steps performed by catalyst should
   # reside, so application-wide plugins can modify
@@ -10,9 +11,9 @@ role Faz::Application {
 
   multi method handle($request? is context = $*request,
                       $response? is context = $*response) {
-     my $application is context = self;
+     my $app is context = self;
      # TODO: context vars are still globals in rakudo...
-     $*application = self;
+     $*app = self;
      $*request = $request;
      $*response = $response;
      %*stash = ();
