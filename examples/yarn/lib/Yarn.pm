@@ -5,6 +5,7 @@ use Faz::Dispatcher;
 use Faz::Action::Root;
 use Faz::Action::Chained;
 use Faz::Action::Public;
+use Yarn::Model::Posts;
 use Tags;
 
 class Yarn is Faz::Application {
