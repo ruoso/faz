@@ -1,3 +1,4 @@
+use Faz::Component;
 class Yarn::Model::Posts does Faz::Component {
   my @posts = 'data/posts' ~~ :f
     ?? @(eval(slurp('data/posts')))
